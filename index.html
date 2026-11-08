@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#d9f5f7">
+  <title>Chemie · 50 ml + 50 ml = 100 ml?</title>
+  <link rel="stylesheet" href="css/styles.css?v=kupfer-woche-1">
+  <style>
+    #main:has(.section-intro) { padding-top: 14px !important; }
+    .section-intro { margin-bottom: 12px; }
+    .section-intro .eyebrow { margin: 0; }
+    .section-intro h1 { font-size: clamp(1.5rem, 3vw, 1.85rem); margin: 5px 0 10px; }
+    .section-intro > p:empty { display: none; }
+    .section-intro > p { white-space: pre-line; }
+    .volumen-sicherheit, .volumen-stopp {
+      padding: 12px 18px;
+      border-left: 5px solid #b6217c;
+      border-radius: 0 12px 12px 0;
+      background: #fff1f9;
+      color: #611147;
+    }
+    .volumen-sicherheit .experiment-notices { margin: 0 0 10px; }
+    .volumen-sicherheitssymbole { display: flex; flex-wrap: wrap; gap: 12px; }
+    .volumen-sicherheitssymbole img { width: 58px; height: 58px; object-fit: contain; }
+    .volumen-stopp { margin-top: 20px; }
+    .volumen-stopp p { margin: 6px 0; }
+    .volumen-tabelle { width: 100%; border-collapse: collapse; margin: 14px 0; }
+    .volumen-tabelle th, .volumen-tabelle td { border: 1px solid #a7c6ca; padding: 10px; text-align: left; }
+    .volumen-tabelle thead { background: var(--blue); }
+    .volumen-tabelle tbody th { width: 36%; }
+    .volumen-tabelle td span { display: inline-block; }
+    .volumen-lueckentext { white-space: pre-line; }
+    .volumen-einzelfeld img { max-width: 220px; }
+    #material-vermuten-1 { margin: 10px 0; padding: 12px 16px; }
+    #material-vermuten-1 h2 { margin: 3px 0; }
+    #material-vermuten-1 .material-figure { margin: 4px 0; }
+    #material-vermuten-1 img { width: min(100%, 240px); }
+    #material-vermuten-1 > p { margin: 6px 0 0; font-size: 1.25rem; font-weight: 700; }
+    #material-modell-1 > ol { font-weight: 700; }
+    #main:has(#task-vermutung) .tasks { margin-top: 12px; }
+    #task-vermutung { padding: 12px 16px; }
+    #task-vermutung .task-heading h2, #task-vermutung .task-part p { margin: 4px 0; }
+    #task-vermutung .actions { margin-top: 10px; gap: 8px; align-items: center; }
+    #task-vermutung .task-tools { margin-top: 0; }
+    @media (min-width: 700px) {
+      .branding-compact .school-logo { width: 225px; }
+      #material-vermuten-1 {
+        display: grid;
+        grid-template-columns: 205px minmax(0, 1fr);
+        column-gap: 18px;
+        align-items: center;
+      }
+      #material-vermuten-1 > .badge, #material-vermuten-1 > h2 { grid-column: 1 / -1; }
+    }
+    @media screen {
+      .section-complete > strong::before, .unit-feedback.success > strong::before {
+        content: '👍';
+        margin-right: .4em;
+      }
+    }
+  </style>
+  <script defer src="js/woche-volumen.js"></script>
+  <script defer src="js/text-format.js?v=kupfer-woche-1"></script>
+  <script defer src="js/task-types.js?v=kupfer-woche-1"></script>
+  <script defer src="js/state.js?v=kupfer-woche-1"></script>
+  <script defer src="js/task-ui.js?v=kupfer-woche-1"></script>
+  <script defer src="js/woche-volumen-ui.js"></script>
+  <script defer src="js/ui.js?v=kupfer-woche-1"></script>
+</head>
+<body>
+  <header class="masthead"><div class="shell"><div id="school-logo" class="school-logo" hidden></div><div><p>Chemie · Gemeinsam lernen und entdecken</p></div></div></header>
+  <div id="learning-status" class="sticky-status" hidden></div>
+  <main id="main" class="shell" tabindex="-1"></main>
+  <nav id="bottom-nav" class="bottom-nav" aria-label="Seitennavigation" hidden></nav>
+  <div id="dialog-backdrop" class="dialog-backdrop" hidden><section role="dialog" aria-modal="true" aria-labelledby="dialog-title" class="dialog"><h2 id="dialog-title">Lernstand löschen?</h2><p>Alle erledigten Aufgaben und gespeicherten Eingaben dieser Lernumgebung werden gelöscht. Das lässt sich nicht rückgängig machen.</p><div class="actions"><button id="cancel-reset">Abbrechen</button><button id="confirm-reset" class="danger">Löschen und neu beginnen</button></div></section></div>
+  <template id="volumen-sicherheit">
+    <div class="volumen-sicherheit">
+      <div class="volumen-sicherheitssymbole">
+        <img src="assets/volumen-schutzbrille.jpg" alt="Schutzbrille tragen">
+        <img src="assets/volumen-ghs02.png" alt="GHS02 · Leicht entzündlich">
+        <img src="assets/volumen-ghs07.png" alt="GHS07 · Ausrufezeichen">
+      </div>
+    </div>
+  </template>
+  <template id="messwerttabelle-vorlage">
+    <table class="volumen-tabelle">
+      <thead><tr><th scope="col">Messung</th><th scope="col">Volumen in ml</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Vor dem Mischen</th><td><span>______ ml Wasser</span> + <span>______ ml Spiritus</span></td></tr>
+        <tr><th scope="row">Nach dem Mischen</th><td>______ ml Gemisch</td></tr>
+      </tbody>
+    </table>
+  </template>
+  <template id="volumen-stopp-vermutung">
+    <aside class="volumen-stopp" data-inserted="volumen-stopp-vermutung">
+      <strong>STOPP!</strong>
+      <p>Besprecht eure Vermutungen gemeinsam mit der Lehrkraft im Plenum. Arbeitet erst danach weiter.</p>
+    </aside>
+  </template>
+  <template id="volumen-stopp">
+    <aside class="volumen-stopp" data-inserted="volumen-stopp">
+      <strong>STOPP!</strong>
+      <p>Besprecht eure Beobachtungen und Messergebnisse gemeinsam mit der Lehrkraft im Plenum.</p>
+      <p>Arbeitet erst danach weiter.</p>
+    </aside>
+  </template>
+  <template id="teilchenzeichnung-vorlage">
+    <figure class="material-figure">
+      <img src="assets/volumen-zeichenhilfe.svg" alt="Drei leere Zeichenfelder für Wasser, Spiritus und das Gemisch. Kleine blaue Kreise stehen für Wasserteilchen, größere orangefarbene Kreise für Spiritusteilchen.">
+    </figure>
+  </template>
+  <template id="wasserteilchen-vorlage">
+    <figure class="material-figure volumen-einzelfeld">
+      <img src="assets/volumen-teilchen-wasser.svg" alt="Genau 16 kleine blaue Wasserteilchen vor dem Mischen.">
+    </figure>
+  </template>
+  <template id="spiritusteilchen-vorlage">
+    <figure class="material-figure volumen-einzelfeld">
+      <img src="assets/volumen-teilchen-spiritus.svg" alt="Neun große orangefarbene Spiritusteilchen vor dem Mischen.">
+    </figure>
+  </template>
+  <template id="volumen-modellhilfe">
+    <figure class="material-figure">
+      <img src="assets/volumen-modellzeichnung.svg" alt="Vor dem Mischen 16 kleine blaue Wasserteilchen und 9 große orangefarbene Spiritusteilchen in zwei gleich großen Feldern. Im Gemisch sind dieselben 16 Wasserteilchen und 9 Spiritusteilchen auf kleinerer Gesamtfläche angeordnet.">
+    </figure>
+  </template>
+  <template id="sicherung-luecken-vorlage">
+    <p class="volumen-lueckentext">Wasser und Spiritus bestehen aus unterschiedlich großen __________.
+
+Die Wasserteilchen sind __________ als die Spiritusteilchen.
+
+Beim Mischen können sich die kleineren Wasserteilchen in die __________ zwischen den größeren Spiritusteilchen anordnen.
+
+Dadurch benötigen die Teilchen zusammen __________ Platz.</p>
+  </template>
+  <script>/* Klassische Skripte unterstützen auch den direkten Aufruf über file://. */</script>
+</body>
+</html>
+
